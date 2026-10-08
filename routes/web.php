@@ -6,6 +6,23 @@ Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+
+
+
 });
+
+// Páginas de testes (guias 03.1 a 03.4): apenas em desenvolvimento (APP_ENV=local)
+if (app()->isLocal()) {
+    Route::prefix('dev')->name('dev.')->group(function () {
+        Route::view('tailwind', 'dev.tailwind')->name('tailwind');
+        Route::view('components', 'dev.components')->name('components');
+        Route::livewire('livewire', 'pages::dev.livewire')->name('livewire');
+    });
+
+}
+
+
+
+
 
 require __DIR__.'/settings.php';
