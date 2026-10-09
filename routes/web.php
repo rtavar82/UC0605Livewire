@@ -7,8 +7,6 @@ Route::view('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
-
-
 });
 
 // Páginas de testes (guias 03.1 a 03.4): apenas em desenvolvimento (APP_ENV=local)
@@ -20,9 +18,5 @@ if (app()->isLocal()) {
     });
 
 }
-
-
-
-
 
 require __DIR__.'/settings.php';
