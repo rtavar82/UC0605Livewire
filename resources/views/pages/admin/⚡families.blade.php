@@ -7,7 +7,9 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -17,6 +19,11 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
 
     public string $search = '';
 
+    public string $status = 'all';
+
+    #[Url(as: 'family', except: '')]
+    public string $showing = '';
+
     /**
      * All families, including the soft deleted ones, filtered by the search term.
      *
@@ -25,7 +32,13 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
     #[Computed]
     public function families(): LengthAwarePaginator
     {
-        return Family::withTrashed()
+        $query = match ($this->status) {
+            'active' => Family::query(),
+            'trashed' => Family::onlyTrashed(),
+            default => Family::withTrashed(),
+        };
+
+        return $query
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($query): void {
                     $query->where('name', 'like', "%{$this->search}%")
@@ -43,10 +56,15 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
     {
         $this->resetPage();
     }
+
     public ?int $editingId = null;
+
     public string $name = '';
+
     public string $slug = '';
+
     public string $description = '';
+
     /**
      * Open the drawer with an empty form.
      */
@@ -63,6 +81,7 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
     public function edit(int $id): void
     {
         $family = Family::findOrFail($id);
+        $this->closeShow();
 
         $this->resetForm();
         $this->editingId = $family->id;
@@ -81,6 +100,7 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
         $this->reset('editingId', 'name', 'slug', 'description');
         $this->resetValidation();
     }
+
     /**
      * Create or update the family.
      */
@@ -108,6 +128,7 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
 
         $this->resetForm();
     }
+
     /**
      * Keep the slug in sync with the name until the admin edits the slug by hand.
      */
@@ -117,30 +138,104 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
             $this->slug = Str::slug($value);
         }
     }
+
     /**
      * Soft delete the family.
      */
     public function delete(int $id): void
     {
         Family::findOrFail($id)->delete();
+        $this->closeShow();
 
         Flux::toast(variant: 'warning', text: 'Família removida.');
     }
+
     /**
      * Permanently delete a soft deleted family.
      */
+    #[On('family-force-delete-confirmed')]
     public function forceDelete(int $id): void
     {
         Family::onlyTrashed()->findOrFail($id)->forceDelete();
+        $this->closeShow();
 
         Flux::toast(variant: 'danger', text: 'Família eliminada definitivamente.');
     }
+
     /** Restore a soft deleted family. */
     public function restore(int $id): void
     {
         Family::onlyTrashed()->findOrFail($id)->restore();
 
         Flux::toast(variant: 'success', text: 'Família restaurada.');
+    }
+
+    /**
+     * The family shown in the show drawer, including a soft deleted one.
+     */
+    #[Computed]
+    public function shownFamily(): ?Family
+    {
+        return Family::withTrashed()->firstWhere('slug', $this->showing);
+    }
+
+    /**
+     * Open the show drawer with the family's details.
+     */
+    public function show(int $id): void
+    {
+        $this->showing = Family::withTrashed()->findOrFail($id)->slug;
+
+        Flux::modal('family-show')->show();
+    }
+
+    /**
+     * Close the show drawer and remove the family from the URL.
+     */
+    public function closeShow(): void
+    {
+        $this->showing = '';
+
+        Flux::modal('family-show')->close();
+    }
+
+    /**
+     * Open the drawer of the family given in the URL (?family=slug).
+     */
+    public function mount(): void
+    {
+        if ($this->showing === '') {
+            return;
+        }
+
+        if ($this->shownFamily === null) {
+            $this->showing = '';
+
+            return;
+        }
+
+        Flux::modal('family-show')->show();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Ask for confirmation before permanently deleting a soft deleted family.
+     */
+    public function confirmForceDelete(int $id): void
+    {
+        $family = Family::onlyTrashed()->findOrFail($id);
+
+        $this->dispatch('confirm-action',
+            heading: 'Eliminar definitivamente',
+            message: "A família «{$family->name}» será eliminada definitivamente. Esta operação não pode ser desfeita.",
+            confirmEvent: 'family-force-delete-confirmed',
+            params: ['id' => $family->id],
+            confirmLabel: 'Eliminar',
+        );
     }
 };
 ?>
@@ -156,13 +251,19 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
     </div>
 
     <div class="mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-white">
-        <div class="border-b border-stone-200 p-4">
+                <div class="flex flex-wrap items-center gap-3 border-b border-stone-200 p-4">
             <flux:input
                 wire:model.live.debounce.300ms="search"
                 icon="magnifying-glass"
                 placeholder="Pesquisar por nome ou descrição…"
                 class="max-w-sm"
             />
+
+            <flux:select wire:model.live="status" class="max-w-44">
+                <flux:select.option value="all">Todas</flux:select.option>
+                <flux:select.option value="active">Ativas</flux:select.option>
+                <flux:select.option value="trashed">Removidas</flux:select.option>
+            </flux:select>
         </div>
 
         <div class="px-4 [--flux-bleed:1rem]">
@@ -188,11 +289,11 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
                                         <flux:icon.photo variant="mini" />
                                     </span>
                                     <div>
-                                        <p @class([
-                                            'font-medium',
+                                                                                <button type="button" wire:click="show({{ $family->id }})" @class([
+                                            'text-left font-medium hover:underline',
                                             'text-stone-900' => ! $family->trashed(),
                                             'text-red-700 line-through' => $family->trashed(),
-                                        ])>{{ $family->name }}</p>
+                                        ])>{{ $family->name }}</button>
                                         <p @class(['text-xs', 'text-stone-500' => ! $family->trashed(), 'text-red-500' => $family->trashed()])>{{ $family->slug }}</p>
                                     </div>
                                 </div>
@@ -210,7 +311,7 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
                                 <div class="flex justify-end gap-2">
     @if ($family->trashed())
         <flux:button size="sm" icon="arrow-uturn-left" wire:click="restore({{ $family->id }})">Restaurar</flux:button>
-        <flux:button size="sm" variant="danger" icon="trash" wire:click="forceDelete({{ $family->id }})">Eliminar definitivamente</flux:button>
+        <flux:button size="sm" variant="danger" icon="trash" wire:click="confirmForceDelete({{ $family->id }})">Eliminar definitivamente</flux:button>
     @else
         <flux:button size="sm" icon="pencil-square" wire:click="edit({{ $family->id }})">Editar</flux:button>
         <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $family->id }})">Remover</flux:button>
@@ -229,6 +330,60 @@ new #[Layout('layouts::admin')] #[Title('Famílias')] class extends Component
             </flux:table>
         </div>
     </div>
+        <flux:modal name="family-show" flyout class="md:w-lg" @close="closeShow">
+        @if ($shownFamily = $this->shownFamily)
+            <div class="space-y-6">
+                {{-- Imagem da família: o carregamento de imagens será implementado numa tarefa futura --}}
+                <div class="flex aspect-video flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-stone-300 bg-stone-50 text-stone-400">
+                    <flux:icon.photo class="size-10" />
+                    <span class="text-sm">Imagem ainda não disponível</span>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-3">
+                        <flux:heading size="xl">{{ $shownFamily->name }}</flux:heading>
+
+                        <flux:badge size="sm" :color="$shownFamily->trashed() ? 'red' : 'green'">{{ $shownFamily->trashed() ? 'Removida' : 'Ativa' }}</flux:badge>
+                    </div>
+                    <flux:text class="mt-1">{{ $shownFamily->slug }}</flux:text>
+                </div>
+
+                <div>
+                    <flux:heading>Descrição</flux:heading>
+                    <flux:text class="mt-2 whitespace-pre-line">{{ $shownFamily->description ?? 'Sem descrição.' }}</flux:text>
+                </div>
+
+                <dl class="grid grid-cols-2 gap-4 rounded-xl bg-stone-50 p-4 text-sm">
+                    <div>
+                        <dt class="text-stone-500">Criada em</dt>
+                        <dd class="font-medium text-stone-900">{{ $shownFamily->created_at?->format('d/m/Y H:i') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-stone-500">Atualizada em</dt>
+                        <dd class="font-medium text-stone-900">{{ $shownFamily->updated_at?->format('d/m/Y H:i') }}</dd>
+                    </div>
+                    @if ($shownFamily->trashed())
+    <div>
+        <dt class="text-red-600">Removida em</dt>
+        <dd class="font-medium text-red-700">{{ $shownFamily->deleted_at?->format('d/m/Y H:i') }}</dd>
+    </div>
+@endif
+                </dl>
+
+                <div class="flex flex-wrap justify-end gap-2">
+                    @if ($shownFamily->trashed())
+                        <flux:button icon="arrow-uturn-left" wire:click="restore({{ $shownFamily->id }})">Restaurar</flux:button>
+                        <flux:button variant="danger" icon="trash" wire:click="confirmForceDelete({{ $shownFamily->id }})">Eliminar definitivamente</flux:button>
+                    @else
+                        <flux:button icon="pencil-square" wire:click="edit({{ $shownFamily->id }})">Editar</flux:button>
+                        <flux:button variant="danger" icon="trash" wire:click="delete({{ $shownFamily->id }})">Remover</flux:button>
+                    @endif
+
+                    <flux:button variant="ghost" wire:click="closeShow">Fechar</flux:button>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
     <flux:modal name="family-form" flyout class="md:w-lg">
         <form wire:submit="save" class="space-y-6">
             <div>

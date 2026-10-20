@@ -14,4 +14,9 @@
             {{ $footer }}
         </div>
     @endisset
+    @isset($actions)
+        <div class="flex justify-end gap-2 border-t border-stone-200 px-5 py-3">
+            {{ $actions }}
+        </div>
+    @endisset
 </div>

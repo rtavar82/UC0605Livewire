@@ -7,7 +7,7 @@
             <h2 class="text-xl font-semibold text-stone-900">Primeiro Teste</h2>
             <div class="flex items-center gap-4">
                 <button>Sem classes</button>
-                <button class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 cursor-pointer">
+                <button class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 cursor-pointer uppercase tracking-wider">
                     Com classes
                 </button>
             </div>
@@ -78,6 +78,10 @@
         </section>
         <section class="space-y-6">
             <h2 class="text-xl font-semibold text-stone-900">5. Flexbox e Grid</h2>
+<div class="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 ring-2 ring-brand-500">
+    <span class="flex size-10 items-center justify-center rounded-full bg-brand-600 font-semibold text-white">SA</span>
+    <div><p class="font-medium">Sofia Almeida</p><p class="text-sm text-stone-500">sofia@exemplo.test</p></div>
+</div>
 
             <p class="text-sm text-stone-600"><code>flex</code> põe os filhos em linha; <code>justify-between</code> + <code>items-center</code>:</p>
             <div class="flex h-20 items-center justify-between rounded-lg bg-stone-100 px-4">
@@ -123,7 +127,7 @@
                 <span class="hidden xl:inline">xl (≥ 1280)</span>
             </p>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 <div class="rounded-xl border border-stone-200 bg-white p-4">Cartão 1</div>
                 <div class="rounded-xl border border-stone-200 bg-white p-4">Cartão 2</div>
                 <div class="rounded-xl border border-stone-200 bg-white p-4">Cartão 3</div>
@@ -195,6 +199,7 @@
             @endphp
 
             <div class="rounded-lg p-4 bg-{{ $color }}-100 text-{{ $color }}-800">ERRADO: classe montada em PHP</div>
+<div @class(['rounded-lg p-4', 'bg-rose-100 text-rose-800' => $color === 'rose', 'bg-brand-100 text-brand-800' => $color !== 'rose'])>Exercício corrigido com classes condicionais</div>
 
             <div class="{{ $isError ? 'bg-rose-100 text-rose-800' : 'bg-brand-100 text-brand-800' }} rounded-lg p-4">
                 CERTO: classes completas, escolhidas por uma condição

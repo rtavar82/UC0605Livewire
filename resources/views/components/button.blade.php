@@ -4,6 +4,7 @@
     $variants = match ($variant) {
         'secondary' => 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-50',
         'danger' => 'bg-red-600 text-white hover:bg-red-700',
+        'ghost' => 'text-stone-700 hover:bg-stone-100',
         default => 'bg-brand-600 text-white hover:bg-brand-700',
     };
 @endphp

@@ -86,4 +86,6 @@
     </x-slot:actions>
 
     {{ $slot }}
+
+    <livewire:confirm-modal />
 </x-layouts::dashboard>

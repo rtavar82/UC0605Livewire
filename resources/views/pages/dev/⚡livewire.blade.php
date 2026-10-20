@@ -1,14 +1,14 @@
 <?php
 
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
-use Livewire\Component;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Validate;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
+use Livewire\Component;
 
-
-new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
+new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component
+{
     //
     public int $count = 0;
 
@@ -21,7 +21,6 @@ new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
     public string $email = '';
 
     public ?string $saved = null;
-
 
     public int $likes = 0;
 
@@ -41,13 +40,24 @@ new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
         $this->reset('suggestion', 'email');
     }
 
+    public function resetCount(): void
+    {
+        $this->reset('count');
+    }
+
+    public function updatedEmail(): void
+    {
+        $this->validateOnly('email');
+    }
+
     public function increment(): void
     {
         $this->count++;
     }
+
     public function decrement(): void
     {
-        $this->count --;
+        $this->count = max(0, $this->count - 1);
     }
 
     #[Computed]
@@ -63,18 +73,13 @@ new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
             fn (string $name) => str_contains(mb_strtolower($name), mb_strtolower($this->search)),
         ));
     }
-
-
-
-
-
 };
 ?>
 
 <div class="space-y-16">
     <h1 class="text-3xl font-bold tracking-tight text-stone-900">Laboratório de Livewire</h1>
 
-    {{-- As secções seguintes são acrescentadas aqui --}}
+
 
     <section class="space-y-4">
         <h2 class="text-xl font-semibold text-stone-900">2. Contador</h2>
@@ -83,6 +88,7 @@ new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
             <x-button variant="secondary" wire:click="decrement">−</x-button>
             <span class="w-12 text-center text-3xl font-bold text-stone-900">{{ $count }}</span>
             <x-button wire:click="increment">+</x-button>
+<x-button variant="secondary" wire:click="resetCount">Repor</x-button>
         </div>
     </section>
 
@@ -126,7 +132,7 @@ new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
 
             <div class="space-y-1">
                 <label for="email" class="text-sm font-medium">O seu email</label>
-                <input id="email" type="text" wire:model="email"
+                <input id="email" type="text" wire:model.live.blur="email"
                        class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/40">
                 @error('email')
                 <p class="text-sm text-red-600">{{ $message }}</p>
@@ -147,4 +153,5 @@ new #[Layout('layouts::dev')] #[Title('Livewire')] class extends Component {
 
 
 
+<section class="space-y-4"><h2 class="text-xl font-semibold text-stone-900">5. Componentes filhos e eventos</h2><p>Total de gostos: <strong>{{ $likes }}</strong></p></section>
 </div>

@@ -81,7 +81,7 @@ new #[Layout('layouts::dev')] #[Title('Flux')] class extends Component
     <div class="flex flex-wrap items-center gap-3">
         <flux:button size="sm" variant="primary">Pequeno</flux:button>
         <flux:button variant="primary">Normal</flux:button>
-        <flux:button variant="primary" icon="plus">Com ícone</flux:button>
+        <flux:button variant="primary" icon="pencil-square">Com ícone</flux:button>
         <flux:button variant="outline" icon-trailing="arrow-right">Seguinte</flux:button>
         <flux:button variant="ghost" icon="trash" size="sm" aria-label="Remover" />
         <flux:button href="{{ route('dev.tailwind') }}" variant="outline">É um link</flux:button>
@@ -100,7 +100,7 @@ new #[Layout('layouts::dev')] #[Title('Flux')] class extends Component
         <flux:heading size="lg">3. Formulários</flux:heading>
 
         <form wire:submit="save" class="max-w-lg space-y-6 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-            <flux:input wire:model="commonName" label="Nome comum" placeholder="Ex.: Rosa-brava" />
+            <flux:field><flux:label>Nome comum</flux:label><flux:input wire:model="commonName" placeholder="Ex.: Rosa-brava" /><flux:error name="commonName" /></flux:field>
 
             <flux:select wire:model="family" label="Família" placeholder="Escolher família…">
                 <flux:select.option value="rosaceae">Rosaceae</flux:select.option>
@@ -162,7 +162,7 @@ new #[Layout('layouts::dev')] #[Title('Flux')] class extends Component
                 <flux:button icon-trailing="chevron-down">Opções</flux:button>
 
                 <flux:menu>
-                    <flux:menu.item icon="eye">Ver</flux:menu.item>
+                    <flux:tooltip content="Ver os detalhes da planta"><flux:menu.item icon="eye">Ver</flux:menu.item></flux:tooltip>
                     <flux:menu.item icon="pencil-square">Editar</flux:menu.item>
                     <flux:menu.separator />
                     <flux:menu.item icon="trash" variant="danger">Remover</flux:menu.item>
@@ -241,4 +241,28 @@ new #[Layout('layouts::dev')] #[Title('Flux')] class extends Component
     </flux:field>
 
 
+<section class="space-y-4">
+    <flux:heading size="lg">Espécies botânicas</flux:heading>
+    <flux:table>
+        <flux:table.columns>
+            <flux:table.column>Nome científico</flux:table.column>
+            <flux:table.column>Família</flux:table.column>
+            <flux:table.column>Estado</flux:table.column>
+        </flux:table.columns>
+        <flux:table.rows>
+            @foreach (['Rosa canina' => 'Rosaceae', 'Lavandula angustifolia' => 'Lamiaceae', 'Quercus robur' => 'Fagaceae'] as $species => $familyName)
+                <flux:table.row :key="$species">
+                    <flux:table.cell>{{ $species }}</flux:table.cell>
+                    <flux:table.cell>{{ $familyName }}</flux:table.cell>
+                    <flux:table.cell><flux:badge color="green">Ativa</flux:badge></flux:table.cell>
+                </flux:table.row>
+            @endforeach
+        </flux:table.rows>
+    </flux:table>
+</section>
+<section class="max-w-lg space-y-4">
+    <flux:heading size="lg">7. Personalizar com Tailwind</flux:heading>
+    <flux:button variant="primary" class="w-full">Largura total</flux:button>
+    <flux:input class="max-w-xs" label="Campo com largura limitada" />
+</section>
 </div>
