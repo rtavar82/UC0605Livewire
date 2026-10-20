@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "D:\\Formacao\\ATEC\\IDE\\Exercicios\\PHP\\Soltos\\php-8.5.10-Win32-vs17-x64\\php.exe",
+      "args": [
+        "D:\\Formacao\\ATEC\\IDE\\Exercicios\\PHP\\UC0605Livewire\\FloraHub\\florahub\\florahub\\artisan",
+        "boost:mcp"
+      ]
+    }
+  }
+}

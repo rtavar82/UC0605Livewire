@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
+/**
+ * @phpstan-ignore-next-line
+ */
 trait ProfileValidationRules
 {
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
@@ -8,7 +9,9 @@ test('guests are redirected to the login page', function () {
 });
 
 test('authenticated users can visit the dashboard', function () {
+    $this->seed(RoleSeeder::class);
     $user = User::factory()->create();
+    $user->assignRole('user');
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
